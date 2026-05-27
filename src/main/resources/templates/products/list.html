@@ -48,18 +48,31 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="page-header">
             <h4 class="fw-bold mb-0">상품 목록</h4>
-            <small class="text-muted">총 <span th:text="${#lists.size(products)}"></span>개 상품</small>
+            <small class="text-muted">총 <span th:text="${productPage.totalElements}"></span>개 상품
+                (페이지 <span th:text="${productPage.number + 1}"></span>
+                / <span th:text="${productPage.totalPages == 0 ? 1 : productPage.totalPages}"></span>)
+            </small>
         </div>
         <a th:href="@{/products/add}" class="btn btn-danger btn-sm px-4 fw-semibold"
            sec:authorize="hasRole('ADMIN')">+ 상품 등록</a>
     </div>
 
+    
+    <form th:action="@{/products}" method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" name="keyword" class="form-control" placeholder="상품명으로 검색" th:value="${keyword}" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary">검색</button>
+            <a th:href="@{/products}" class="btn btn-outline-secondary">초기화</a>
+        </div>
+    </form>
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
-            <div th:if="${#lists.isEmpty(products)}" class="text-center py-5 text-muted">
+            <div th:if="${productPage.isEmpty()}" class="text-center py-5 text-muted">
                 <p class="mb-0">등록된 상품이 없습니다.</p>
             </div>
-            <div th:unless="${#lists.isEmpty(products)}" class="table-responsive">
+            <div th:unless="${productPage.isEmpty()}" class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                     <thead>
                         <tr>
@@ -73,7 +86,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="p : ${products}">
+                        <tr th:each="p : ${productPage.content}">
                             <td class="ps-4 text-muted small" th:text="${p.id}"></td>
                             <td>
                                 <a th:href="@{/products/{id}(id=${p.id})}"
@@ -101,6 +114,25 @@
                         </tr>
                     </tbody>
                 </table>
+                <nav th:if="${productPage.totalPages > 0}" class="py-3" aria-label="Product pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item" th:classappend="${productPage.first} ? ' disabled'">
+                            <a class="page-link"
+                               th:href="@{/products(page=${productPage.number - 1}, size=${productPage.size}, keyword=${keyword})}">이전</a>
+                        </li>
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+                            th:classappend="${i == productPage.number} ? ' active'">
+                            <a class="page-link"
+                               th:href="@{/products(page=${i}, size=${productPage.size}, keyword=${keyword})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${productPage.last} ? ' disabled'">
+                            <a class="page-link"
+                               th:href="@{/products(page=${productPage.number + 1}, size=${productPage.size}, keyword=${keyword})}">다음</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
